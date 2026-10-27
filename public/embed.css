@@ -1,0 +1,58 @@
+html.embed,
+.embed body {
+  height: 100%;
+  overflow: hidden;
+  background: transparent;
+}
+
+.embed #app {
+  max-width: none;
+  height: 100%;
+  padding: 0;
+}
+
+.embed header,
+.embed .intro,
+.embed .mode-label {
+  display: none;
+}
+
+.embed main {
+  height: 100%;
+  padding: 0;
+}
+
+.embed .game {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.embed .game-top {
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.embed .game-top > span:nth-child(2) {
+  display: none;
+}
+
+.embed .live-volume {
+  font-weight: 700;
+}
+
+.embed .live-volume strong {
+  color: #e2663d;
+  font-size: 20px;
+  margin-left: 6px;
+}
+
+.embed .field-stage {
+  flex: 1;
+  min-height: 0;
+}
+
+.embed canvas {
+  height: 100%;
+}
+
