@@ -1,39 +1,42 @@
 # Footy Volume
 
-A playful volume control: kick a rugby ball to set the volume, with an optional puppy chasing after it.
+All this, just to turn the volume up.
 
-Built with TypeScript, Vite, Three.js, and Rapier 3D. Runs entirely in the browser without a backend or API keys.
+Kick a footy, watch where it lands, and live with the volume you get. Bring a puppy into the next round if that sounds too straightforward.
 
-## Why this exists
+## From “UI is Hard” to this
 
-After I wrote “UI is Hard,” a friend introduced me to the Worst UI Challenge: deliberately making a terrible volume control. This game was my excuse to stop chasing efficiency and make something playfully awkward instead—setting the volume by kicking a footy.
+I wrote a post called “UI is Hard.” A friend responded by showing me the Worst UI Challenge, where people invent deliberately terrible volume controls.
 
-The physics were inspired by Pro Jank Footy, which I saw at a game expo. Its unusual ball movement and 3D physics presented through a 2D view stuck with me. Even with an intentionally awkward interface, I wanted the player's actions to stay in their control.
+I usually think about how to make an interface more efficient. This was an excuse to send that instinct in the opposite direction. What if adjusting the volume required a well-placed kick?
 
-Read the story: [UI is Hard is Easy](https://heejun.net/developer/ui-is-hard-is-easy/).
+The title [UI is Hard is Easy](https://heejun.net/developer/ui-is-hard-is-easy/) is a playful reply to that earlier post, with a nod to Richard P. Gabriel’s “Worse is Better is Worse.”
 
-## Getting started
+## A footy game that stayed with me
 
-Requires Node.js 22.12 or later.
+Earlier that year, I saw Pro Jank Footy at a game expo. Its odd ball movement caught my attention, so I asked the developer about it: a 3D engine underneath, presented through a 2D filter.
+
+That idea stayed with me until this little experiment gave me somewhere to use it.
+
+## Awkward, on purpose
+
+Making something inefficient doesn't mean abandoning every UX value. I still wanted the player's actions to matter, even when the outcome was hard to predict.
+
+And yes, there's a puppy. You can play solo, or invite a little more chaos.
+
+## Give it a kick
+
+Drag and release to kick. Try **Original** for power and elevation controls, or **Contact aim** to choose where your foot meets the ball. The final position sets the volume; the speaker button lets you hear it. Your device volume stays as it is.
+
+The game is playable in the [original blog post](https://heejun.net/developer/ui-is-hard-is-easy/), alongside the full story.
+
+## Run locally
+
+With Node.js 22.12 or later:
 
 ```sh
 npm install
 npm run dev
 ```
 
-## How to play
-
-- Choose **Original** for power and elevation controls, or **Contact aim** to choose where to strike the ball.
-- Drag and release to kick. The ball's final position determines the volume.
-- Replay solo or with a puppy.
-- Use the speaker button to play a sample at the selected volume. This does not change your device volume.
-
-## Commands
-
-```sh
-npm run lint     # Check the source with ESLint
-npm run build    # Type-check and build into dist/
-npm run preview  # Preview the production build
-```
-
-Deploy `dist/` to any static hosting service. Add `?embed` to the URL for the embedded layout.
+Made with TypeScript, Vite, Three.js, and Rapier 3D.
