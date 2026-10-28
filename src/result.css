@@ -1,0 +1,48 @@
+/* Game-owned result card, shared by standalone and embedded play. */
+#result {
+  position: absolute;
+  z-index: 4;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(340px, calc(100% - 24px));
+  max-height: calc(100% - 20px);
+  overflow-y: auto;
+  padding: 28px;
+  border: 1px solid #c3cdb1;
+  border-radius: 24px;
+  background: #faf8ed;
+  box-shadow: 0 12px 40px #263b3224;
+  text-align: center;
+  pointer-events: auto;
+}
+
+#result > span { font-size: 18px; font-weight: 600; }
+.result-score { display: flex; align-items: center; justify-content: center; gap: 9px; margin: 12px 0 24px; }
+#result .result-score strong { display: block; color: #e5653f; font-size: 80px; line-height: 1; letter-spacing: -4px; font-variant-numeric: tabular-nums; }
+#result small { font-size: 30px; margin-left: 5px; letter-spacing: 0; }
+#result button { min-height: 44px; border: 1px solid #263b32; background: #263b32; color: #faf8e9; font-size: 14px; }
+#result #sound { display: grid; place-items: center; flex-shrink: 0; width: 44px; min-height: 44px; padding: 0; margin: 0; border: 0; border-radius: 8px; background: transparent; color: #52664a; }
+#result #sound:hover { color: #263b32; }
+#result #sound:active { transform: scale(.94); }
+#replay-label { margin: 0 0 10px; color: #75806c; font-size: 11px; font-weight: 600; letter-spacing: 1.5px; }
+.replay-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+#result .replay-buttons button { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; margin: 0; padding: 10px 12px; border-radius: 12px; font-weight: 600; }
+#result #replay-solo { border-color: #d4dcc9; background: transparent; color: #304237; }
+#result #replay-solo:hover { background: #e1e8d5; border-color: #aebfa1; }
+#result #replay-puppy { border-color: #304237; background: #304237; color: #fffdf5; font-size: 16px; }
+#result #replay-puppy:hover { background: #46604c; }
+#result #replay-puppy span { font-size: 20px; }
+#result .replay-buttons button:active { transform: translateY(1px); }
+
+/* Keep the returning puppy visible above the card on narrow screens. */
+@media (max-width: 700px) {
+  #result { width: min(280px, calc(100% - 24px)); padding: 10px 14px; border-radius: 16px; line-height: 1.2; }
+  #result > span { font-size: 14px; }
+  #result .result-score { gap: 4px; margin: 4px 0 8px; }
+  #result .result-score strong { font-size: 40px; letter-spacing: -2px; }
+  #result small { font-size: 20px; }
+  #replay-label { margin: 0 0 4px; font-size: 10px; line-height: 1.2; }
+  #result .replay-buttons button { min-height: 44px; padding: 6px 10px; }
+  #result #replay-puppy span { font-size: 18px; }
+}

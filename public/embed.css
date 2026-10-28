@@ -1,8 +1,19 @@
 html.embed,
+.embed body,
+.embed #app,
+.embed #app * {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+html.embed,
 .embed body {
   height: 100%;
   overflow: hidden;
   background: transparent;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 .embed #app {
@@ -55,4 +66,3 @@ html.embed,
 .embed canvas {
   height: 100%;
 }
-
