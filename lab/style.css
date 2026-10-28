@@ -6,3 +6,32 @@ body{background:#f4f1e8;color:#253c3a}header,main{max-width:1440px;margin:auto;p
 #game-mode{display:block;width:100%;margin:8px 0 16px;font:inherit;font-size:13px;padding:10px 12px;border:1px solid #253c3a44;border-radius:8px;background:#fffdf5;color:#253c3a}
 
 #status:empty,#details:empty{display:none}
+
+.mobile-replays{display:none}
+[data-saved-replay][aria-pressed=true]{background:#253c3a;color:#fffdf5;border-color:#253c3a}
+@media(max-width:900px){
+  header{padding:10px 12px;font-size:10px}
+  main{padding:8px 10px 12px}
+  h1{font-size:24px;margin:4px 0 10px}
+  .lab{border-radius:12px}
+  .lab>aside,#report-tabs,#report-controls,[role=tabpanel]:not(#panel-replay){display:none!important}
+  .mobile-replays{display:block;grid-row:1;padding:10px 10px 0;min-width:0}
+  .replay-modes{display:flex;gap:6px}
+  .replay-modes button{flex:1;min-height:44px;font-weight:600}
+  .mobile-note{font-size:11px;line-height:1.4;color:#5d6e65;margin:6px 0}
+  .shot-picker{display:flex;align-items:center;gap:10px;font-size:12px}
+  .shot-picker select{flex:1;min-width:0;min-height:44px}
+  .viewer{grid-row:2;padding:6px 10px 10px}
+  .viewer-top{gap:8px;font-size:10px}
+  .viewer-top strong{font-size:22px;white-space:nowrap}
+  .stage{height:clamp(160px,calc(100svh - 350px),420px);margin:6px 0}
+  .playback{gap:6px;flex-wrap:nowrap}
+  .playback button,.playback select{min-height:44px;padding:8px 10px}
+  .playback label{margin-left:auto;font-size:12px;white-space:nowrap}
+  #timeline{margin-top:6px;min-height:28px}
+  #details{display:none}
+  #status{font-size:12px;line-height:1.4;margin:6px 0}
+  #replay-result{padding:12px;width:min(240px,calc(100% - 24px))}
+  #replay-result>strong{font-size:48px}
+  #replay-result button{margin-top:8px;min-height:44px}
+}

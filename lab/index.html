@@ -2,10 +2,19 @@
 <html lang="en">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Footy Lab — High-score replays</title><script type="module" src="./main.ts"></script></head>
 <body>
-<header><a href="../">← Original game</a><span>FIELDWORK / SHOT LAB</span></header>
+<header><a href="../index.html">← Original game</a><span>FIELDWORK / SHOT LAB</span></header>
 <main>
   <h1>How did that go in?</h1>
+  <p id="status" role="status"></p>
   <section class="lab" aria-label="Shot laboratory">
+    <section class="mobile-replays" aria-label="Saved Top 10 replays">
+      <div class="replay-modes" role="group" aria-label="Replay mode">
+        <button type="button" data-saved-replay="solo-top-10" aria-pressed="false" disabled>Solo Top 10</button>
+        <button type="button" data-saved-replay="puppy-top-10" aria-pressed="false" disabled>Puppy Top 10</button>
+      </div>
+      <p class="mobile-note">Search is disabled on mobile by design. Enjoy the replays.</p>
+      <label class="shot-picker" for="mobile-shot">Shot <select id="mobile-shot" disabled><option>No shots loaded</option></select></label>
+    </section>
     <aside>
       <h2>01 / SEARCH</h2>
       <label for="game-mode">Game mode</label>
@@ -18,9 +27,13 @@
       <p id="cpu-info" class="hint"></p>
       <div class="actions"><button id="search">Find high scores</button><button id="stop" disabled>Stop</button></div>
       <progress id="progress" max="1" value="0" aria-label="Search progress"></progress>
-      <p id="status" role="status"></p>
       <div id="timings" aria-live="polite"></div>
       <h2>02 / EXAMPLE SHOTS</h2>
+      <div class="actions">
+        <button type="button" data-saved-replay="solo-top-10" aria-pressed="false" disabled>Load Solo Top 10</button>
+        <button type="button" data-saved-replay="puppy-top-10" aria-pressed="false" disabled>Load Puppy Top 10</button>
+      </div>
+      <p class="hint">Recorded runs: load and watch immediately, without a new search. Puppy Top 10 includes physics glitches. Playback uses saved frames; seeds alone do not guarantee identical new searches across devices.</p>
       <div id="results"><p class="empty">No shots</p></div>
       <button id="download" disabled>Download report + replays (JSON)</button>
       <label class="import" for="upload">Import saved JSON<input id="upload" type="file" accept=".json,application/json"></label>

@@ -28,6 +28,10 @@ const speed = element<HTMLSelectElement>('speed');
 const progress = element<HTMLProgressElement>('progress');
 const density = element<HTMLSelectElement>('density');
 const upload = element<HTMLInputElement>('upload');
+const savedReplays = [...document.querySelectorAll<HTMLButtonElement>('[data-saved-replay]')];
+const mobile = window.matchMedia('(max-width: 900px)');
+const mobileShot = element<HTMLSelectElement>('mobile-shot');
+let loadingReplays = false;
 const workerCount = element<HTMLSelectElement>('workers');
 const workerCounts = [1, 2, 4, 6, 8, 10, 12];
 const logicalCores = navigator.hardwareConcurrency;
@@ -63,7 +67,8 @@ async function start() {
   const volumePopover = createVolumePopover(canvas);
   scene.draw(initial.position, initial.rotation, false);
   scene.setRearView(true);
-  search.disabled = false;
+  search.disabled = mobile.matches;
+  savedReplays.forEach(button => { button.disabled = false; });
   let pool: ReturnType<typeof createSearchPool> | undefined;
   let searchStopped = false;
   let results: Result[] = [];
@@ -151,6 +156,7 @@ async function start() {
     timeline.value = String(time);
   }
   function choose(result: Result, index: number) {
+    mobileShot.value = String(index);
     selected = result; time = 0; lastIndex = -1; setPlaying(false);
     scene.clearTrail();
     timeline.max = String(1 + result.duration);
@@ -161,6 +167,15 @@ async function start() {
   }
   function showResults(next: Result[]) {
     results = next;
+    savedReplays.forEach(button => button.setAttribute('aria-pressed', 'false'));
+    mobileShot.replaceChildren();
+    results.forEach((result, index) => {
+      const option = document.createElement('option');
+      option.value = String(index);
+      option.textContent = `#${index + 1} · ${result.score.toFixed(2)}% · ${result.shot.angle < 0 ? 'Spike' : 'Loft'}`;
+      mobileShot.append(option);
+    });
+    mobileShot.disabled = results.length === 0;
     const list = element('results'); list.replaceChildren();
     results.forEach((result, index) => {
       const button = document.createElement('button');
@@ -175,11 +190,13 @@ async function start() {
   }
   function finishSearch() {
     pool = undefined;
-    search.disabled = false; stop.disabled = true;
+    search.disabled = mobile.matches; stop.disabled = true;
     density.disabled = workerCount.disabled = upload.disabled = false;
     gameMode.disabled = false;
+    savedReplays.forEach(button => { button.disabled = false; });
   }
   async function runSearch() {
+    if (mobile.matches || loadingReplays) return;
     const requestedWorkers = Number(workerCount.value);
     const mode = gameMode.value as GameMode;
     // Contact sampling requires the visible aiming canvas.
@@ -210,6 +227,7 @@ async function start() {
     search.disabled = true; stop.disabled = false;
     density.disabled = workerCount.disabled = upload.disabled = true;
     gameMode.disabled = true;
+    savedReplays.forEach(button => { button.disabled = true; });
     searchStopped = false;
     progress.value = 0;
     reports.setTimings([]);
@@ -252,11 +270,9 @@ async function start() {
     const url = URL.createObjectURL(blob); const link = document.createElement('a');
     link.href = url; link.download = 'footy-lab-results.json'; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
   });
-  upload.addEventListener('change', async () => {
-    const file = upload.files?.[0]; if (!file) return;
-    try {
-      if (file.size > 20_000_000) throw new Error('Files must be 20 MB or smaller.');
-      const data = JSON.parse(await file.text()) as { format?: string; results?: unknown; report?: unknown; timings?: unknown };
+  function importReplays(value: unknown) {
+      if (!value || typeof value !== 'object') throw new Error('Invalid replay data.');
+      const data = value as { format?: string; results?: unknown; report?: unknown; timings?: unknown };
       if (!['footy-lab-v1', 'footy-lab-v2'].includes(data.format ?? '') || !Array.isArray(data.results) || !data.results.length || data.results.length > 12) throw new Error('Choose a JSON file exported by this Lab.');
       const vector = (v: unknown): boolean => !!v && typeof v === 'object' && ['x', 'y', 'z'].every(key => Number.isFinite((v as Record<string, unknown>)[key]));
       const dogPose = (pose: DogPose | undefined): boolean => !!pose && typeof pose.enabled === 'boolean' && typeof pose.active === 'boolean'
@@ -270,6 +286,8 @@ async function start() {
         && Number.isFinite(r.shot.power) && r.shot.power >= 5 && r.shot.power <= 100
         && Number.isFinite(r.shot.heading) && Math.abs(r.shot.heading) <= 30
         && vector(r.shot.contact?.point) && vector(r.shot.contact?.normal)
+        && Number.isFinite(r.score) && r.score >= 0 && r.score <= 100
+        && Number.isFinite(r.distance) && r.distance >= 0 && Number.isFinite(r.duration) && r.duration > 0
         && Number.isFinite(r.u) && r.u >= 0 && r.u <= 1 && Number.isFinite(r.v) && r.v >= 0 && r.v <= 1
         && Array.isArray(r.frames) && r.frames.length >= 2 && r.frames.length <= 1082
         && r.frames.every(f => f && vector(f.position) && vector(f.rotation) && Number.isFinite(f.rotation.w)
@@ -297,10 +315,59 @@ async function start() {
         const p = r.frames[r.frames.length - 1].position;
         return { ...r, duration: (r.frames.length - 1) / 60, score: scorePosition(p), distance: Math.hypot(p.x - TARGET.x, p.z - TARGET.z) };
       }));
-      status.textContent = 'Loaded';
+      gameMode.value = first.mode ?? 'solo';
+      progress.value = importedReport ? 1 : 0;
+      status.textContent = `Loaded ${data.results.length} ${gameMode.value === 'puppy' ? 'Puppy' : 'Solo'} replays · Select a shot and press Play`;
+  }
+  savedReplays.forEach(button => button.addEventListener('click', async () => {
+    if (loadingReplays || pool) return;
+    loadingReplays = true;
+    search.disabled = upload.disabled = true;
+    savedReplays.forEach(item => { item.disabled = true; });
+    status.textContent = 'Loading saved Top 10…';
+    try {
+      const response = await fetch(new URL(`../replays/${button.dataset.savedReplay}.json`, window.location.href));
+      if (!response.ok) throw new Error(`Could not load saved replays (${response.status}).`);
+      importReplays(await response.json());
+      savedReplays.forEach(item => item.setAttribute('aria-pressed', String(item.dataset.savedReplay === button.dataset.savedReplay)));
+      status.textContent = '';
+      setPlaying(true);
+    } catch (error) { status.textContent = `Load failed: ${error instanceof Error ? error.message : String(error)}`; }
+    finally {
+      loadingReplays = false;
+      search.disabled = mobile.matches; upload.disabled = false;
+      savedReplays.forEach(item => { item.disabled = false; });
+    }
+  }));
+  upload.addEventListener('change', async () => {
+    const file = upload.files?.[0]; if (!file || mobile.matches || loadingReplays) return;
+    loadingReplays = true;
+    search.disabled = upload.disabled = true;
+    savedReplays.forEach(button => { button.disabled = true; });
+    try {
+      if (file.size > 20_000_000) throw new Error('Files must be 20 MB or smaller.');
+      importReplays(JSON.parse(await file.text()));
     } catch (error) { status.textContent = `Import failed: ${error instanceof Error ? error.message : String(error)}`; }
-    upload.value = '';
+    finally {
+      loadingReplays = false;
+      upload.value = '';
+      search.disabled = mobile.matches; upload.disabled = false;
+      savedReplays.forEach(button => { button.disabled = false; });
+    }
   });
+  mobileShot.addEventListener('change', () => {
+    const index = Number(mobileShot.value);
+    if (results[index]) { choose(results[index], index); setPlaying(true); }
+  });
+  function enterMobileReplay() {
+    if (!mobile.matches) { search.disabled = !!pool || loadingReplays; return; }
+    search.disabled = true;
+    if (pool) { searchStopped = true; pool.cancel(); }
+    reports.showReplay();
+    if (!results.length && !loadingReplays && !pool) savedReplays[0].click();
+  }
+  mobile.addEventListener('change', enterMobileReplay);
+  enterMobileReplay();
   new ResizeObserver(() => { if (canvas.clientWidth > 0 && canvas.clientHeight > 0) { scene.clearTrail(); render(); } }).observe(canvas);
   function frame(now: number) {
     const dt = Math.min((now - previous) / 1000, .1); previous = now;

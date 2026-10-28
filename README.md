@@ -194,3 +194,24 @@ fixed grid order to break ties independently of worker completion order. The poo
 never starts more workers than there are contact-point jobs. Stop terminates the
 whole pool; previous completed searches and timings remain available
 until the page is reloaded or another search is started.
+
+### Saved Top 10
+
+Use **Load Solo Top 10** or **Load Puppy Top 10** to fetch the published results
+on demand and start playback without searching or uploading a file. These include
+the whole-search report and timings; only the top ten recorded replays are kept.
+Fixtures live in `public/replays/` and are included by `sync:blog`.
+Puppy examples include physics glitches. Recorded ball and dog poses are replayed
+without physics simulation, so device speed changes playback timing, not the
+saved trajectory. New searches depend on viewport contact sampling, exact shot
+parameters, engine version, and initial state as well as seeds; the same seed
+alone is not a cross-device guarantee.
+
+### Mobile replay view
+
+At widths up to 900px, the Lab shows Solo/Puppy Top 10 mode tabs, a compact
+shot selector, and playback controls. Solo loads automatically on entry. Search,
+reports, import/export, and detailed shot parameters are hidden; search is also
+blocked in code, and an active desktop search is cancelled when entering this
+layout. Desktop keeps the full Lab. Mobile explains: “Search is disabled on
+mobile by design. Enjoy the replays.”
