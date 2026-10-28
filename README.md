@@ -56,9 +56,9 @@ npm run sync:blog
 npm run sync:blog -- /path/to/my-blog
 ```
 
-The sync copies the game entry, its generated dependencies, and the shared embed
-stylesheet. It updates iframe cache versions in the five translated posts while
-preserving other edits. Shot Lab is not copied. Legacy blog-only result, puppy,
+The sync copies both game and Lab entries, generated dependencies including search
+workers, the shared embed stylesheet, and saved replay JSON files. It updates iframe cache versions in the five translated posts while
+preserving other edits. Shot Lab is available at `/games/ui-is-hard-is-easy/lab/` on the blog. Legacy blog-only result, puppy,
 and volume overrides are removed; edit the game source and sync again instead
 of patching the blog's generated game files. Unused older hashed assets are kept
 so already-open pages can still load them.
