@@ -43,8 +43,50 @@
   transform: translate(-50%, -100%) scale(1);
 }
 
+.ball-distance-guide,
+.ball-distance-label {
+  position: absolute;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 180ms ease;
+}
+
+.ball-distance-guide {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.ball-distance-guide line {
+  stroke: #52664a;
+  stroke-opacity: .5;
+  stroke-width: 1;
+  stroke-dasharray: 3 5;
+  stroke-linecap: round;
+}
+
+.ball-distance-label {
+  padding: 2px 5px;
+  border-radius: 4px;
+  background: #faf8edde;
+  color: #52664a;
+  font-size: 11px;
+  line-height: 1.3;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  transform: translate(-50%, -50%);
+}
+
+.ball-distance-guide.is-visible,
+.ball-distance-label.is-visible {
+  opacity: 1;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .ball-volume {
+  .ball-volume,
+  .ball-distance-guide,
+  .ball-distance-label {
     transition: none;
   }
 }

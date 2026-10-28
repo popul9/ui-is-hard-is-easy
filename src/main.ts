@@ -1,7 +1,7 @@
 import './style.css';
 import './volume-popover.css';
 import { createVolumePopover } from './volume-popover';
-import { createPhysics, kickDirection } from './physics';
+import { createPhysics, kickDirection, TARGET } from './physics';
 import { scorePosition, flightFinished } from './rules';
 import { shotSeed } from './random';
 import { createScene } from './scene';
@@ -169,7 +169,7 @@ async function start() {
     }
     const liveVolume = state === 'flying' ? updateVolume() : volume;
     scene.draw(physics.body.translation(), physics.body.rotation(), state === 'flying');
-    volumePopover.update({ active: state === 'flying' && !scene.dog.carrying && !closeupFlight && elapsed > .6, point: scene.screenPoint(physics.body.translation()), velocity: physics.body.linvel(), height: physics.body.translation().y, volume: liveVolume });
+    volumePopover.update({ active: state === 'flying' && !scene.dog.carrying && !closeupFlight && elapsed > .6, point: scene.screenPoint(physics.body.translation()), groundPoint: scene.screenPoint({ ...physics.body.translation(), y: .015 }), targetPoint: scene.screenPoint({ ...TARGET, y: .015 }), distance: Math.hypot(physics.body.translation().x - TARGET.x, physics.body.translation().z - TARGET.z), velocity: physics.body.linvel(), height: physics.body.translation().y, volume: liveVolume });
     requestAnimationFrame(frame);
   }
   reset(); requestAnimationFrame(frame);

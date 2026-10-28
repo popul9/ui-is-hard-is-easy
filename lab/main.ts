@@ -78,7 +78,7 @@ async function start() {
     element('aim').hidden = element('contact-label').hidden = true;
     element('pull-guide').setAttribute('hidden', '');
     element('replay-result').hidden = true;
-    if (resetPopover) volumePopover.update({ active: false, point: { x: 0, y: 0 }, velocity: { x: 0, y: 0, z: 0 }, height: 0, volume: 0 });
+    if (resetPopover) volumePopover.update({ active: false, point: { x: 0, y: 0 }, groundPoint: { x: 0, y: 0 }, targetPoint: { x: 0, y: 0 }, distance: 0, velocity: { x: 0, y: 0, z: 0 }, height: 0, volume: 0 });
   }
   function showKickGuide(result: Result) {
     const shot = result.shot; const contact = shot.contact;
@@ -139,7 +139,9 @@ async function start() {
       const prior = selected.frames[Math.max(0, index - 1)].position;
       const velocity = frame.velocity ?? { x: (frame.position.x - prior.x) * 60, y: (frame.position.y - prior.y) * 60, z: (frame.position.z - prior.z) * 60 };
       const finished = time >= Number(timeline.max);
-      volumePopover.update({ active: !finished && !scene.dog.carrying && time - 1 > .6 && !rear, point: scene.screenPoint(frame.position), velocity,
+      volumePopover.update({ active: !finished && !scene.dog.carrying && time - 1 > .6 && !rear, point: scene.screenPoint(frame.position),
+        groundPoint: scene.screenPoint({ ...frame.position, y: .015 }), targetPoint: scene.screenPoint({ ...TARGET, y: .015 }),
+        distance: Math.hypot(frame.position.x - TARGET.x, frame.position.z - TARGET.z), velocity,
         height: frame.position.y, volume: scorePosition(frame.position) });
       element('replay-result').hidden = !finished;
       element('result-volume').textContent = String(Math.round(selected.score));
