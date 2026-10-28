@@ -3,6 +3,7 @@ import './volume-popover.css';
 import { createVolumePopover } from './volume-popover';
 import { createPhysics, kickDirection } from './physics';
 import { scorePosition, flightFinished } from './rules';
+import { shotSeed } from './random';
 import { createScene } from './scene';
 import { bindInput } from './input';
 import type { Contact, Shot } from './input';
@@ -122,7 +123,7 @@ async function start() {
   function launch(shot: Shot) {
     physics.kick(shot.power, shot.angle, shot.heading, shot.contact); state = 'flying';
     closeupFlight = true;
-    if (dogEnabled) scene.dog.start();
+    if (dogEnabled) scene.dog.start(shotSeed(shot));
     status.textContent = dogEnabled ? 'The puppy notices the ball, then chases for 4 seconds. Keep it up!' : 'In flight… Wait for the final bounce.';
   }
   function updateVolume() {

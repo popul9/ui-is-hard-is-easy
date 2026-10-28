@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { RigidBodyType, type RigidBody } from '@dimforge/rapier3d-compat';
 import type { Vector3 } from './input';
+import { seededRandom } from './random';
 
 const PLAY_TIME = 4;
 const DOG_SCALE = 1.1;
@@ -8,7 +9,14 @@ const CONTACT_RADIUS = .45 + .6 * DOG_SCALE;
 const REACTION_TIME = 1;
 // Keep the owner above the centered result card in the field overview.
 const HOME = new THREE.Vector3(0, 0, -19);
-export function createDog(scene: THREE.Scene, canvas: HTMLCanvasElement) {
+export type DogPose = {
+  time: number; enabled: boolean; active: boolean; carrying?: boolean; position: Vector3;
+  lift: number; heading: number; tilt: number; scale: Vector3; headTilt: number;
+  ears: number[]; legs: number[]; tail: number; shadowScale: number; shadowOpacity: number;
+};
+export function createDog(scene: THREE.Scene, canvas?: HTMLCanvasElement) {
+  let random = seededRandom(1);
+  let replayCarrying: boolean | null = null;
   const root = new THREE.Group(); scene.add(root);
   const pup = new THREE.Group(); root.add(pup);
   const cream = new THREE.MeshStandardMaterial({ color: '#f7d9a0', roughness: 1 });
@@ -43,10 +51,14 @@ export function createDog(scene: THREE.Scene, canvas: HTMLCanvasElement) {
     oval(owner, dark, [.12, .4, .13], [side * .18, .4, 0]);
     oval(owner, cream, [.1, .4, .1], [side * .43, 1.2, 0]);
   }
-  const countdown = document.createElement('span'); countdown.className = 'dog-countdown';
-  const call = document.createElement('span'); call.className = 'dog-call'; call.textContent = 'Come back!';
-  countdown.setAttribute('aria-hidden', 'true'); call.setAttribute('aria-hidden', 'true');
-  canvas.parentElement!.append(countdown, call);
+  // Workers share the original behavior without creating DOM labels.
+  const countdown = canvas ? document.createElement('span') : null;
+  const call = canvas ? document.createElement('span') : null;
+  if (countdown && call) {
+    countdown.className = 'dog-countdown'; call.className = 'dog-call'; call.textContent = 'Come back!';
+    countdown.setAttribute('aria-hidden', 'true'); call.setAttribute('aria-hidden', 'true');
+    canvas!.parentElement!.append(countdown, call);
+  }
   let time = 0; let enabled = false; let active = false; let fetchAfterBounce = false; let bounced = false; let contactCooldown = 0; let carriedBall: RigidBody | null = null; let heading = 0;
   let jumpHeight = 0; let jumpVelocity = 0; let nextJump = 0;
   const previousCenter = new THREE.Vector3();
@@ -58,14 +70,16 @@ export function createDog(scene: THREE.Scene, canvas: HTMLCanvasElement) {
     carriedBall = null;
   }
   function reset() {
+    replayCarrying = null;
     releaseBall();
-    time = 0; enabled = false; active = false; fetchAfterBounce = Math.random() < .5; bounced = false; contactCooldown = 0; heading = Math.PI / 2;
-    jumpHeight = 0; jumpVelocity = 0; nextJump = REACTION_TIME + .2 + Math.random() * .4;
+    time = 0; enabled = false; active = false; fetchAfterBounce = random() < .5; bounced = false; contactCooldown = 0; heading = Math.PI / 2;
+    jumpHeight = 0; jumpVelocity = 0; nextJump = REACTION_TIME + .2 + random() * .4;
     pup.position.y = 0; pup.rotation.set(0, heading, 0); pup.scale.setScalar(DOG_SCALE);
     root.position.copy(HOME).add(new THREE.Vector3(0, 0, 1.4)); root.visible = false; owner.visible = false;
-    countdown.hidden = true; call.hidden = true;
+    if (countdown) countdown.hidden = true;
+    if (call) call.hidden = true;
   }
-  function start() { reset(); enabled = true; active = true; root.visible = true; owner.visible = true; }
+  function start(seed = 1) { random = seededRandom(seed); reset(); enabled = true; active = true; root.visible = true; owner.visible = true; }
   function update(dt: number, ball: RigidBody, flying: boolean) {
     if (!active) return;
     time += dt;
@@ -104,8 +118,8 @@ export function createDog(scene: THREE.Scene, canvas: HTMLCanvasElement) {
     const lookingUp = chasing && p.y > 1.3;
     // Schedule jumps rather than sampling randomness every animation frame.
     if (lookingUp && jumpHeight === 0 && time >= nextJump) {
-      jumpVelocity = (2.2 + Math.random() * 1.6) * 1.12;
-      nextJump = time + .65 + Math.random() * .8;
+      jumpVelocity = (2.2 + random() * 1.6) * 1.12;
+      nextJump = time + .65 + random() * .8;
     }
     if (jumpVelocity !== 0 || jumpHeight > 0) {
       jumpVelocity -= 15 * dt;
@@ -173,10 +187,12 @@ export function createDog(scene: THREE.Scene, canvas: HTMLCanvasElement) {
   }
   function draw(screenPoint: (p: Vector3) => { x: number; y: number }, visible: boolean) {
     root.visible = enabled && active && visible; owner.visible = enabled && visible;
+    if (!canvas || !countdown || !call) return;
+    const carrying = replayCarrying ?? carriedBall !== null;
     const playElapsed = Math.max(0, time - REACTION_TIME);
-    countdown.hidden = !visible || !active || time < .6 || playElapsed >= PLAY_TIME || carriedBall !== null;
-    call.hidden = !visible || !active || (playElapsed < PLAY_TIME && !carriedBall);
-    call.textContent = carriedBall ? 'Good puppy!' : 'Come back!';
+    countdown.hidden = !visible || !active || time < .6 || playElapsed >= PLAY_TIME || carrying;
+    call.hidden = !visible || !active || (playElapsed < PLAY_TIME && !carrying);
+    call.textContent = carrying ? 'Good puppy!' : 'Come back!';
     countdown.textContent = time < REACTION_TIME ? '🏉'
       : playElapsed < 1 ? '🏉!!'
       : Math.max(0, PLAY_TIME - playElapsed).toFixed(1);
@@ -187,6 +203,28 @@ export function createDog(scene: THREE.Scene, canvas: HTMLCanvasElement) {
       label.style.top = `${THREE.MathUtils.clamp(p.y, 24, Math.max(24, canvas.clientHeight - 24))}px`;
     }
   }
+  function capture(): DogPose {
+    return { time, enabled, active, carrying: carriedBall !== null, position: { x: root.position.x, y: root.position.y, z: root.position.z },
+      lift: pup.position.y, heading: pup.rotation.y, tilt: pup.rotation.z,
+      scale: { x: pup.scale.x, y: pup.scale.y, z: pup.scale.z }, headTilt: head.rotation.z,
+      ears: ears.map(ear => ear.rotation.x), legs: legs.map(leg => leg.rotation.z), tail: tail.rotation.y,
+      shadowScale: shadow.scale.x, shadowOpacity: shadow.material.opacity };
+  }
+  // Restore recorded visuals only. Replay never applies another impulse to the ball.
+  function restore(pose?: DogPose) {
+    if (!pose) {
+      replayCarrying = false; enabled = active = false; root.visible = owner.visible = false;
+      if (countdown) countdown.hidden = true;
+      if (call) call.hidden = true;
+      return;
+    }
+    replayCarrying = pose.carrying ?? false; time = pose.time; enabled = pose.enabled; active = pose.active;
+    root.position.copy(pose.position); pup.position.y = pose.lift;
+    pup.rotation.set(0, pose.heading, pose.tilt); pup.scale.copy(pose.scale); head.rotation.z = pose.headTilt;
+    ears.forEach((ear, i) => { ear.rotation.x = pose.ears[i]; });
+    legs.forEach((leg, i) => { leg.rotation.z = pose.legs[i]; });
+    tail.rotation.y = pose.tail; shadow.scale.setScalar(pose.shadowScale); shadow.material.opacity = pose.shadowOpacity;
+  }
   reset();
-  return { start, reset, update, draw, get playFinished() { return time >= REACTION_TIME + PLAY_TIME; }, get carrying() { return carriedBall !== null; } };
+  return { start, reset, update, draw, capture, restore, get playFinished() { return time >= REACTION_TIME + PLAY_TIME; }, get carrying() { return replayCarrying ?? carriedBall !== null; } };
 }
