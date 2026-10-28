@@ -123,7 +123,8 @@ reinforcement learning or automatic browser control is involved.
 
 ### Puppy behavior and reproducibility
 
-The puppy chases and deflects the ball, then returns to the owner. The original
+The puppy chases and deflects the ball, then returns in front of the owner, sits,
+and keeps wagging its tail beneath the “Good puppy!” label, matching the blog game. The original
 fetching behavior is enabled: a seeded 50% fetch tendency allows it to pick up a
 slow ball on a later encounter after a rebound, carry it home, and drop it before
 scoring. The original puppy update routine is retained, with only its random-number
@@ -142,7 +143,7 @@ but never create a renderer or DOM labels. Puppy search takes more work per shot
 than Solo. Reports identify the mode and shot-derived seed policy; they are not
 averages over multiple random reactions for each shot.
 
-Puppy replays save each frame's dog position, posture, limb motion, and label
+Puppy replays save each frame's dog position, posture, sitting state, limb motion, and label
 timing alongside the ball. Pausing and scrubbing restore these visuals without
 rerunning collisions. Each selected shot's seed is shown in its details and saved
 in JSON. Replay playback ends at the scoring frame. Older Solo exports remain

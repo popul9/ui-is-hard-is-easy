@@ -10,7 +10,7 @@ const REACTION_TIME = 1;
 // Keep the owner above the centered result card in the field overview.
 const HOME = new THREE.Vector3(0, 0, -19);
 export type DogPose = {
-  time: number; enabled: boolean; active: boolean; carrying?: boolean; position: Vector3;
+  time: number; enabled: boolean; active: boolean; sitting?: boolean; carrying?: boolean; position: Vector3;
   lift: number; heading: number; tilt: number; scale: Vector3; headTilt: number;
   ears: number[]; legs: number[]; tail: number; shadowScale: number; shadowOpacity: number;
 };
@@ -59,7 +59,7 @@ export function createDog(scene: THREE.Scene, canvas?: HTMLCanvasElement) {
     countdown.setAttribute('aria-hidden', 'true'); call.setAttribute('aria-hidden', 'true');
     canvas!.parentElement!.append(countdown, call);
   }
-  let time = 0; let enabled = false; let active = false; let fetchAfterBounce = false; let bounced = false; let contactCooldown = 0; let carriedBall: RigidBody | null = null; let heading = 0;
+  let time = 0; let enabled = false; let active = false; let sitting = false; let fetchAfterBounce = false; let bounced = false; let contactCooldown = 0; let carriedBall: RigidBody | null = null; let heading = 0;
   let jumpHeight = 0; let jumpVelocity = 0; let nextJump = 0;
   const previousCenter = new THREE.Vector3();
   function releaseBall() {
@@ -72,15 +72,23 @@ export function createDog(scene: THREE.Scene, canvas?: HTMLCanvasElement) {
   function reset() {
     replayCarrying = null;
     releaseBall();
-    time = 0; enabled = false; active = false; fetchAfterBounce = random() < .5; bounced = false; contactCooldown = 0; heading = Math.PI / 2;
+    time = 0; enabled = false; active = false; sitting = false; fetchAfterBounce = random() < .5; bounced = false; contactCooldown = 0; heading = Math.PI / 2;
     jumpHeight = 0; jumpVelocity = 0; nextJump = REACTION_TIME + .2 + random() * .4;
     pup.position.y = 0; pup.rotation.set(0, heading, 0); pup.scale.setScalar(DOG_SCALE);
+    legs.forEach(leg => { leg.rotation.set(0, 0, 0); leg.position.y = .25; leg.scale.set(.12, .25, .12); });
+    head.rotation.set(0, 0, 0); tail.rotation.set(0, 0, -.6);
     root.position.copy(HOME).add(new THREE.Vector3(0, 0, 1.4)); root.visible = false; owner.visible = false;
     if (countdown) countdown.hidden = true;
     if (call) call.hidden = true;
   }
   function start(seed = 1) { random = seededRandom(seed); reset(); enabled = true; active = true; root.visible = true; owner.visible = true; }
   function update(dt: number, ball: RigidBody, flying: boolean) {
+    if (sitting) {
+      time += dt;
+      tail.rotation.y = Math.sin(time * 18) * .85;
+      head.rotation.z = .12 + Math.sin(time * 3) * .025;
+      return;
+    }
     if (!active) return;
     time += dt;
     const playElapsed = Math.max(0, time - REACTION_TIME);
@@ -103,7 +111,7 @@ export function createDog(scene: THREE.Scene, canvas?: HTMLCanvasElement) {
     const chasing = playElapsed < PLAY_TIME && !carriedBall;
     const reacting = !carriedBall && playElapsed >= PLAY_TIME && playElapsed < PLAY_TIME + .45;
     const p = ball.translation();
-    const target = chasing ? new THREE.Vector3(THREE.MathUtils.clamp(p.x, -22, 22), 0, THREE.MathUtils.clamp(p.z, -11, 11)) : HOME;
+    const target = chasing ? new THREE.Vector3(THREE.MathUtils.clamp(p.x, -22, 22), 0, THREE.MathUtils.clamp(p.z, -11, 11)) : HOME.clone().add(new THREE.Vector3(0, 0, 1.4));
     const dx = target.x - root.position.x; const dz = target.z - root.position.z;
     const distance = Math.hypot(dx, dz);
     const moving = !reacting && distance > (chasing ? .55 : .2);
@@ -182,17 +190,25 @@ export function createDog(scene: THREE.Scene, canvas?: HTMLCanvasElement) {
       // Drop at the owner's feet and resume ordinary ball physics before scoring.
       if (carriedBall) carriedBall.setTranslation({ x: HOME.x, y: .5, z: HOME.z + .7 }, true);
       releaseBall();
-      active = false; root.visible = false;
+      active = false; sitting = true;
+      root.position.copy(HOME).add(new THREE.Vector3(0, 0, 1.4));
+      pup.position.y = 0; pup.rotation.set(0, Math.PI / 2, .25); pup.scale.setScalar(DOG_SCALE);
+      legs.forEach((leg, index) => {
+        leg.rotation.z = index < 2 ? -1.1 : -.25;
+        leg.position.y = index < 2 ? .15 : .25;
+        if (index < 2) leg.scale.set(.17, .2, .14);
+      });
+      shadow.scale.setScalar(DOG_SCALE); shadow.material.opacity = .18;
     }
   }
   function draw(screenPoint: (p: Vector3) => { x: number; y: number }, visible: boolean) {
-    root.visible = enabled && active && visible; owner.visible = enabled && visible;
+    root.visible = enabled && (active || sitting) && visible; owner.visible = enabled && visible;
     if (!canvas || !countdown || !call) return;
     const carrying = replayCarrying ?? carriedBall !== null;
     const playElapsed = Math.max(0, time - REACTION_TIME);
     countdown.hidden = !visible || !active || time < .6 || playElapsed >= PLAY_TIME || carrying;
-    call.hidden = !visible || !active || (playElapsed < PLAY_TIME && !carrying);
-    call.textContent = carrying ? 'Good puppy!' : 'Come back!';
+    call.hidden = !visible || (!active && !sitting) || (!sitting && playElapsed < PLAY_TIME && !carrying);
+    call.textContent = (sitting || carrying) ? 'Good puppy!' : 'Come back!';
     countdown.textContent = time < REACTION_TIME ? '🏉'
       : playElapsed < 1 ? '🏉!!'
       : Math.max(0, PLAY_TIME - playElapsed).toFixed(1);
@@ -204,7 +220,7 @@ export function createDog(scene: THREE.Scene, canvas?: HTMLCanvasElement) {
     }
   }
   function capture(): DogPose {
-    return { time, enabled, active, carrying: carriedBall !== null, position: { x: root.position.x, y: root.position.y, z: root.position.z },
+    return { time, enabled, active, sitting, carrying: carriedBall !== null, position: { x: root.position.x, y: root.position.y, z: root.position.z },
       lift: pup.position.y, heading: pup.rotation.y, tilt: pup.rotation.z,
       scale: { x: pup.scale.x, y: pup.scale.y, z: pup.scale.z }, headTilt: head.rotation.z,
       ears: ears.map(ear => ear.rotation.x), legs: legs.map(leg => leg.rotation.z), tail: tail.rotation.y,
@@ -213,16 +229,21 @@ export function createDog(scene: THREE.Scene, canvas?: HTMLCanvasElement) {
   // Restore recorded visuals only. Replay never applies another impulse to the ball.
   function restore(pose?: DogPose) {
     if (!pose) {
-      replayCarrying = false; enabled = active = false; root.visible = owner.visible = false;
+      replayCarrying = false; enabled = active = sitting = false; root.visible = owner.visible = false;
       if (countdown) countdown.hidden = true;
       if (call) call.hidden = true;
       return;
     }
-    replayCarrying = pose.carrying ?? false; time = pose.time; enabled = pose.enabled; active = pose.active;
+    replayCarrying = pose.carrying ?? false; time = pose.time; enabled = pose.enabled; active = pose.active; sitting = pose.sitting ?? false;
     root.position.copy(pose.position); pup.position.y = pose.lift;
     pup.rotation.set(0, pose.heading, pose.tilt); pup.scale.copy(pose.scale); head.rotation.z = pose.headTilt;
     ears.forEach((ear, i) => { ear.rotation.x = pose.ears[i]; });
-    legs.forEach((leg, i) => { leg.rotation.z = pose.legs[i]; });
+    legs.forEach((leg, i) => {
+      leg.rotation.set(0, 0, pose.legs[i]);
+      leg.position.y = sitting && i < 2 ? .15 : .25;
+      if (sitting && i < 2) leg.scale.set(.17, .2, .14);
+      else leg.scale.set(.12, .25, .12);
+    });
     tail.rotation.y = pose.tail; shadow.scale.setScalar(pose.shadowScale); shadow.material.opacity = pose.shadowOpacity;
   }
   reset();

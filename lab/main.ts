@@ -255,6 +255,7 @@ async function start() {
       const vector = (v: unknown): boolean => !!v && typeof v === 'object' && ['x', 'y', 'z'].every(key => Number.isFinite((v as Record<string, unknown>)[key]));
       const dogPose = (pose: DogPose | undefined): boolean => !!pose && typeof pose.enabled === 'boolean' && typeof pose.active === 'boolean'
         && (pose.carrying === undefined || typeof pose.carrying === 'boolean')
+        && (pose.sitting === undefined || typeof pose.sitting === 'boolean')
         && vector(pose.position) && vector(pose.scale) && ['time', 'lift', 'heading', 'tilt', 'headTilt', 'tail', 'shadowScale', 'shadowOpacity'].every(key => Number.isFinite(pose[key as keyof DogPose]))
         && Array.isArray(pose.ears) && pose.ears.length === 2 && pose.ears.every(Number.isFinite)
         && Array.isArray(pose.legs) && pose.legs.length === 4 && pose.legs.every(Number.isFinite);
