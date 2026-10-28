@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Footy Lab — High-score replays</title><script type="module" src="./main.ts"></script></head>
+<body>
+<header><a href="../">← Original game</a><span>FIELDWORK / SHOT LAB</span></header>
+<main>
+  <h1>How did that go in?</h1>
+  <section class="lab" aria-label="Shot laboratory">
+    <aside>
+      <h2>01 / SEARCH</h2>
+      <label for="game-mode">Game mode</label>
+      <select id="game-mode"><option value="solo">Solo</option><option value="puppy">Puppy</option></select>
+      <label for="density">Search spacing</label>
+      <select id="density"><option value="quick">Quick · 5 × 5 contacts / power step 10 / heading step 6°</option><option value="fine">Fine · 9 × 9 contacts / power step 5 / heading step 3°</option><option value="ultra">Ultra · 17 × 17 contacts / power step 1 / heading step 1°</option></select>
+      <p id="search-size" class="hint" role="status"></p>
+      <label for="workers">Search workers</label>
+      <select id="workers"><option value="1">1 worker</option><option value="2">2 workers</option><option value="4" selected>4 workers</option><option value="6">6 workers</option><option value="8">8 workers</option><option value="10">10 workers</option><option value="12">12 workers</option></select>
+      <p id="cpu-info" class="hint"></p>
+      <div class="actions"><button id="search">Find high scores</button><button id="stop" disabled>Stop</button></div>
+      <progress id="progress" max="1" value="0" aria-label="Search progress"></progress>
+      <p id="status" role="status"></p>
+      <div id="timings" aria-live="polite"></div>
+      <h2>02 / EXAMPLE SHOTS</h2>
+      <div id="results"><p class="empty">No shots</p></div>
+      <button id="download" disabled>Download report + replays (JSON)</button>
+      <label class="import" for="upload">Import saved JSON<input id="upload" type="file" accept=".json,application/json"></label>
+    </aside>
+    <section class="viewer" aria-label="Replay viewer">
+      <div id="report-tabs" role="tablist" aria-label="Search reports">
+        <button id="tab-overview" role="tab" aria-controls="panel-overview" aria-selected="false" tabindex="-1">Overview</button>
+        <button id="tab-contacts" role="tab" aria-controls="panel-contacts" aria-selected="false" tabindex="-1">Contact map</button>
+        <button id="tab-parameters" role="tab" aria-controls="panel-parameters" aria-selected="false" tabindex="-1">Power &amp; heading</button>
+        <button id="tab-distribution" role="tab" aria-controls="panel-distribution" aria-selected="false" tabindex="-1">Score distribution</button>
+        <button id="tab-performance" role="tab" aria-controls="panel-performance" aria-selected="false" tabindex="-1">Performance</button>
+        <button id="tab-replay" role="tab" aria-controls="panel-replay" aria-selected="true">Replay</button>
+      </div>
+      <div id="report-controls" hidden>
+        <label>Kick type <select id="report-kick"><option value="all">Both</option><option value="40">Loft</option><option value="-65">Spike</option></select></label>
+        <label>Heatmap metric <select id="report-metric"><option value="rounded100">100% display rate (≥99.5)</option><option value="above999">Score ≥99.9 rate</option><option value="above9999">Score ≥99.99 rate</option><option value="best">Best score</option><option value="mean">Mean score</option></select></label>
+      </div>
+      <section id="panel-overview" role="tabpanel" aria-labelledby="tab-overview" hidden></section>
+      <section id="panel-contacts" role="tabpanel" aria-labelledby="tab-contacts" hidden></section>
+      <section id="panel-parameters" role="tabpanel" aria-labelledby="tab-parameters" hidden></section>
+      <section id="panel-distribution" role="tabpanel" aria-labelledby="tab-distribution" hidden></section>
+      <section id="panel-performance" role="tabpanel" aria-labelledby="tab-performance" hidden></section>
+      <div id="panel-replay" role="tabpanel" aria-labelledby="tab-replay">
+      <div class="viewer-top"><span id="phase">REPLAY / SOLO</span><strong id="score">—%</strong></div>
+      <div class="stage field-stage">
+        <canvas id="field" aria-label="Ball contact and shot replay"></canvas>
+        <svg id="pull-guide" aria-hidden="true" hidden><defs><marker id="kick-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="context-stroke"/></marker></defs><line id="pull-line"/><line id="kick-line" marker-end="url(#kick-arrow)"/><circle id="pull-cursor" r="9"/></svg>
+        <span id="contact-label" hidden></span>
+        <div id="aim" hidden><span>POWER <b id="power">0</b>%</span><span>DIRECTION <b id="angle">0</b>°</span><div class="meter"><i id="power-bar"></i></div></div>
+        <div id="replay-result" hidden><strong><span id="result-volume">0</span><small>%</small></strong><button id="replay-again" type="button">Replay shot ↗</button></div>
+      </div>
+      <div class="playback"><button id="play" disabled>Play</button><button id="restart" disabled>Restart</button><label>Speed <select id="speed"><option value="0.25">0.25×</option><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option></select></label></div>
+      <input id="timeline" type="range" min="0" max="1" value="0" step="0.0166666667" disabled aria-label="Playback position">
+      <p id="details"></p>
+      </div>
+    </section>
+  </section>
+</main>
+</body>
+</html>
