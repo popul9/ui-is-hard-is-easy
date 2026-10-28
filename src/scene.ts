@@ -178,6 +178,7 @@ export function createScene(canvas: HTMLCanvasElement) {
   const trailPoints: THREE.Vector3[] = [];
   function resize() {
     const { width, height } = canvas.getBoundingClientRect();
+    if (width <= 0 || height <= 0) return;
     renderer.setSize(width, height, false);
     const aspect = width / height;
     // Keep the overview fixed, with a modest 25% zoom on narrow screens.
@@ -205,5 +206,5 @@ export function createScene(canvas: HTMLCanvasElement) {
     dog.draw(screenPoint, !rearView);
     renderer.render(scene, camera);
   }
-  return { dog, draw, screenPoint, player, pickContact, defaultContact, hoverContact, beginStrike, animateStrike, setRearView, previewStrike, clearAim, clearTrail() { trailPoints.length = 0; trailGeometry.setFromPoints([]); } };
+  return { dog, draw, resize, screenPoint, player, pickContact, defaultContact, hoverContact, beginStrike, animateStrike, setRearView, previewStrike, clearAim, clearTrail() { trailPoints.length = 0; trailGeometry.setFromPoints([]); } };
 }

@@ -1,0 +1,17 @@
+/* Shared kick guides and aim HUD for the game and Shot Lab. */
+#aim{position:absolute;z-index:2;transform:translateX(-50%);width:158px;background:#263b32;color:#faf8e9;padding:12px;border-radius:8px;pointer-events:none;font-size:9px;box-shadow:0 5px 18px #263b3220}
+#aim span+span{float:right}
+#aim b{color:#fbb375}
+.meter{height:4px;background:#526455;margin-top:9px;border-radius:3px;overflow:hidden}
+.meter i{display:block;height:100%;background:#f69868}
+.field-stage #aim{box-shadow:0 4px 20px #263b3240}
+#pull-guide{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1;overflow:hidden}
+#pull-guide[hidden]{display:none}
+#pull-line{stroke-linecap:round}
+#pull-cursor{fill:#263b32;stroke:#f8f5df;stroke-width:2}
+#contact-label{position:absolute;z-index:3;background:#263b32;color:#fff8df;padding:6px 9px;border-radius:4px;font-size:10px;pointer-events:none;white-space:nowrap;box-shadow:0 2px 10px #263b3220}
+#aim>span+span{float:right}
+#kick-line{stroke:#263b32;stroke-width:3;stroke-dasharray:5 5;stroke-linecap:round}
+#pull-guide[data-kick="spike"] #kick-line{stroke:#e5633d}
+#contact-label[data-kick]{font-weight:800;letter-spacing:1px;border:1px solid #f8f5df40}
+#contact-label[data-kick="spike"]{background:#e5633d;color:#fff8df;border-color:#fff8df80}

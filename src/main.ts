@@ -1,7 +1,8 @@
 import './style.css';
 import './volume-popover.css';
 import { createVolumePopover } from './volume-popover';
-import { createPhysics, START, TARGET, kickDirection } from './physics';
+import { createPhysics, kickDirection } from './physics';
+import { scorePosition, flightFinished } from './rules';
 import { createScene } from './scene';
 import { bindInput } from './input';
 import type { Contact, Shot } from './input';
@@ -126,10 +127,8 @@ async function start() {
   }
   function updateVolume() {
     const p = physics.body.translation();
-    const distance = Math.hypot(p.x - TARGET.x, p.z - TARGET.z);
-    const startingDistance = Math.hypot(START.x - TARGET.x, START.z - TARGET.z);
     // Ground-plane proximity: the target is 100%, the starting distance is 0%.
-    const preciseVolume = Math.max(0, Math.min(100, (1 - distance / startingDistance) * 100));
+    const preciseVolume = scorePosition(p);
     volume = Math.round(preciseVolume);
     element('volume').textContent = String(volume);
     return preciseVolume;
@@ -163,10 +162,7 @@ async function start() {
         const slow = Math.hypot(v.x, v.y, v.z) < 0.15 && Math.hypot(w.x, w.y, w.z) < 0.25;
         settled = slow ? settled + 1 / 60 : 0;
         const p = physics.body.translation();
-        if (!scene.dog.carrying) {
-          if ((dogEnabled ? scene.dog.playFinished : elapsed > 1) && (settled > 0.7 || physics.body.isSleeping())) finish();
-          else if (elapsed > 18 || Math.abs(p.x) > 24 || Math.abs(p.z) > 13) finish();
-        }
+        if (flightFinished(p, elapsed, settled, physics.body.isSleeping(), dogEnabled, scene.dog.playFinished, scene.dog.carrying)) finish();
       }
       accumulator -= 1 / 60;
     }

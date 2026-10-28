@@ -1,5 +1,17 @@
 import RAPIER from '@dimforge/rapier3d-compat';
 import type { Contact } from './input';
+// Shared by the game and the isolated lab worlds; keep the impulse identical.
+export function kickBody(body: RAPIER.RigidBody, power: number, angle: number, heading = 0, contact?: Contact) {
+  const speed = 5 + power * (angle < 0 ? 0.5 : 0.18);
+  const direction = kickDirection(angle, heading, contact);
+  if (contact) {
+    const impulse = body.mass() * speed;
+    body.applyImpulseAtPoint({ x: direction.x * impulse, y: direction.y * impulse, z: direction.z * impulse }, contact.point, true);
+  } else {
+    body.setLinvel({ x: direction.x * speed, y: direction.y * speed, z: direction.z * speed }, true);
+    body.setAngvel({ x: 1 + Math.random() * 2, y: (Math.random() - 0.5) * 3, z: -6 - Math.random() * 5 }, true);
+  }
+}
 export const START = { x: -12, y: 0.8, z: 0 };
 export const TARGET = { x: 10, z: 0 };
 // The close-up and physics share the same incoming direction. At grazing edges,
@@ -44,17 +56,7 @@ export async function createPhysics() {
     body.setAngvel({ x: 0, y: 0, z: 0 }, true);
   }
   function kick(power: number, angle: number, heading = 0, contact?: Contact) {
-    const speed = 5 + power * (angle < 0 ? 0.5 : 0.18);
-    const direction = kickDirection(angle, heading, contact);
-    if (contact) {
-      // J = mass * delta velocity. The offset supplies the angular impulse;
-      // ordinary shots get their spin from the chosen contact point.
-      const impulse = body.mass() * speed;
-      body.applyImpulseAtPoint({ x: direction.x * impulse, y: direction.y * impulse, z: direction.z * impulse }, contact.point, true);
-    } else {
-      body.setLinvel({ x: direction.x * speed, y: direction.y * speed, z: direction.z * speed }, true);
-      body.setAngvel({ x: 1 + Math.random() * 2, y: (Math.random() - 0.5) * 3, z: -6 - Math.random() * 5 }, true);
-    }
+    kickBody(body, power, angle, heading, contact);
   }
   return { world, body, reset, kick };
 }
