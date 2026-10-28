@@ -41,6 +41,28 @@ npm run dev
 
 Made with TypeScript, Vite, Three.js, and Rapier 3D.
 
+## Blog embed and shared UI
+
+The game repository owns the result card, button order, mobile styling, puppy
+behavior, and embedded layout. `src/result.css` styles the result card;
+`public/embed.css` adapts the game to its iframe when opened with `?embed`.
+The blog only adjusts the iframe's outer width and margins in its own stylesheet.
+
+To build and copy the game to the sibling blog checkout:
+
+```sh
+npm run sync:blog
+# Or specify a different blog checkout:
+npm run sync:blog -- /path/to/my-blog
+```
+
+The sync copies the game entry, its generated dependencies, and the shared embed
+stylesheet. It updates iframe cache versions in the five translated posts while
+preserving other edits. Shot Lab is not copied. Legacy blog-only result, puppy,
+and volume overrides are removed; edit the game source and sync again instead
+of patching the blog's generated game files. Unused older hashed assets are kept
+so already-open pages can still load them.
+
 ## Shot Lab
 
 No extra dependencies or Python installation are needed. After `npm run dev`, open
