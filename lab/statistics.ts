@@ -26,7 +26,7 @@ export function validReport(value: unknown): value is SearchReport {
   if (report.version !== 1 || !Number.isSafeInteger(report.total) || report.total < 1
     || !axis(report.powers, 5, 100, 96) || !axis(report.headings, -30, 30, 61)
     || !Array.isArray(report.contacts) || !report.contacts.length || report.contacts.length > 578
-    || !Array.isArray(report.cells) || report.cells.length !== 2 * report.powers.length * report.headings.length
+    || !Array.isArray(report.cells) || !report.cells.length || report.cells.length > 2 * report.powers.length * report.headings.length
     || !Array.isArray(report.distributions) || report.distributions.length !== 2) return false;
   const angle = (a: number) => a === 40 || a === -65;
   if (!report.contacts.every(c => stats(c) && angle(c.angle) && Number.isFinite(c.u) && c.u >= 0 && c.u <= 1 && Number.isFinite(c.v) && c.v >= 0 && c.v <= 1)

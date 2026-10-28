@@ -2,6 +2,23 @@ export type Vector3 = { x: number; y: number; z: number };
 export type Contact = { point: Vector3; normal: Vector3 };
 export type Shot = { power: number; angle: number; heading: number; contact?: Contact };
 export type PointerPosition = { x: number; y: number };
+// Canvas-local positions are shared by pointer input and the lab.
+export function dragShot(start: PointerPosition, end: PointerPosition, height: number, contact: Contact): Shot {
+  const dx = start.x - end.x; const dy = end.y - start.y;
+  const downward = dy < 0;
+  const room = downward ? start.y - 16 : height - start.y - 16;
+  const travel = Math.max(45, Math.min(150, height * 0.34, room));
+  return { contact, power: Math.min(100, Math.abs(dy) / travel * 100), angle: downward ? -65 : 40,
+    heading: Math.max(-30, Math.min(30, Math.atan2(dx, Math.max(35, Math.abs(dy))) * 180 / Math.PI)) };
+}
+
+export function dragEnd(start: PointerPosition, height: number, power: number, heading: number, angle: number): PointerPosition {
+  const room = angle < 0 ? start.y - 16 : height - start.y - 16;
+  const travel = Math.max(45, Math.min(150, height * 0.34, room));
+  const dy = power / 100 * travel * (angle < 0 ? -1 : 1);
+  return { x: start.x - Math.tan(heading * Math.PI / 180) * Math.max(35, Math.abs(dy)), y: start.y + dy };
+}
+
 export function bindInput(canvas: HTMLCanvasElement, options: {
   canAim: () => boolean;
   pickContact: (cursor: PointerPosition) => Contact | null;
@@ -31,19 +48,12 @@ export function bindInput(canvas: HTMLCanvasElement, options: {
     const contact = options.pickContact(local);
     if (!contact) return;
     event.preventDefault();
-    start = { x: event.clientX, y: event.clientY }; pointer = event.pointerId;
+    start = local; pointer = event.pointerId;
     shot = { power: 0, angle: 40, heading: 0, contact };
     canvas.setPointerCapture(pointer); canvas.focus({ preventScroll: true }); options.preview(shot, local);
   });
   function updateDrag(event: PointerEvent) {
-    const dx = start.x - event.clientX; const dy = event.clientY - start.y;
-    // Pulling upward drives the ball downward; either direction builds power.
-    const rect = canvas.getBoundingClientRect();
-    const downward = dy < 0;
-    const room = downward ? start.y - rect.top - 16 : rect.bottom - start.y - 16;
-    const travel = Math.max(45, Math.min(150, canvas.clientHeight * 0.34, room));
-    shot = { ...shot, power: Math.min(100, Math.abs(dy) / travel * 100), angle: downward ? -65 : 40,
-      heading: Math.max(-30, Math.min(30, Math.atan2(dx, Math.max(35, Math.abs(dy))) * 180 / Math.PI)) };
+    shot = dragShot(start, localPoint(event), canvas.clientHeight, shot.contact!);
   }
   canvas.addEventListener('pointermove', (event) => {
     if (pointer === null) {

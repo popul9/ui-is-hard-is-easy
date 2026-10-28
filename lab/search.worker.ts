@@ -6,6 +6,7 @@ import { createPhysics, kickBody, TARGET } from '../src/physics';
 import { flightFinished, scorePosition } from '../src/rules';
 import type { Frame, Result, SearchMessage, SearchRequest } from './types';
 import type { SearchReport } from './types';
+import { sampleDrags } from './drags';
 import { emptyStats, addScore } from './statistics';
 
 const send = (message: SearchMessage) => postMessage(message);
@@ -54,7 +55,7 @@ onmessage = async (event: MessageEvent<SearchRequest>) => {
     if (powers.at(-1) !== 100) powers.push(100);
     const headings = Array.from({ length: 60 / headingStep + 1 }, (_, i) => -30 + i * headingStep);
     const report: SearchReport = { version: 1, total: 0, powers, headings, contacts: [], cells: [], distributions: [], mode, ...(withPuppy ? { seedMode: 'shot' as const } : {}) };
-    const total = samples.length * 2 * powers.length * headings.length;
+    const total = samples.reduce((sum, sample) => sum + sample.trials, 0);
     let completed = 0; let best = 0;
     const winners: Result[] = [];
     // Keep a winner for each contact and kick type, then show the best of those.
@@ -67,8 +68,10 @@ onmessage = async (event: MessageEvent<SearchRequest>) => {
         report.distributions.push(distribution);
       }
       let winner: Result | undefined;
-      for (const power of powers) for (const heading of headings) {
-        const result = simulate({ shot: { power, angle, heading, contact: sample.contact }, u: sample.u, v: sample.v,
+      for (const drag of sampleDrags(sample, event.data)) {
+        if (drag.angle !== angle) continue;
+        const { power, heading, shot, start, end } = drag;
+        const result = simulate({ shot, drag: { start, end, width: event.data.width, height: event.data.height }, u: sample.u, v: sample.v,
           score: 0, distance: 0, duration: 0, frames: [] });
         if (!winner || result.score > winner.score) winner = result;
         addScore(contactStats, result.score);
@@ -81,6 +84,7 @@ onmessage = async (event: MessageEvent<SearchRequest>) => {
         if (completed % 100 === 0) send({ type: 'progress', completed, total, best });
       }
       if (winner) winners.push(winner);
+      else report.contacts.pop();
     }
     // Return every contact/type winner; the pool selects the global top results.
     report.total = total;

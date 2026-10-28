@@ -135,7 +135,14 @@ steps of 6°. The fine grid uses 9×9 samples, power steps of 5, and heading ste
 3°. Ultra uses 17×17 samples, power steps of 1, and heading steps of 1°:
 up to 3,384,768 trials before excluding points outside the visible ball. The UI
 shows the trial upper bound for each preset before starting. Samples that miss
-the visible ball are excluded. The results include the top
+the visible ball are excluded. Each candidate is converted to a canvas-local press/release pair,
+then evaluated with the same drag-to-shot function as the game. Releases outside
+the current lab canvas and shots below the playable power threshold are excluded.
+Search results retain the press/release coordinates and canvas dimensions for reproduction;
+these coordinates apply to that viewport size. Power/heading report bins label the requested
+grid values; physics and puppy seeds use the actual values produced by the drag calculation.
+This remains a sampled search, not an enumeration of every possible pointer coordinate.
+The results include the top
 10 contact/kick-type winners and the best of each kick type if missing (up to 12).
 This provides some variation but does not guarantee distinct trajectory styles.
 Scores are ranked before rounding; the game displays rounded percentages.

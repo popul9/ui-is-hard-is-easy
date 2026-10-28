@@ -10,9 +10,7 @@ export function createSearchPool(request: SearchRequest, count: number,
   const promise = new Promise<{ results: Result[]; total: number; workers: number; seconds: number; report: SearchReport }>((resolve, reject) => {
     rejectSearch = reject;
     const started = performance.now();
-    const powerCount = Math.floor(95 / request.powerStep) + 1 + (95 % request.powerStep === 0 ? 0 : 1);
-    const perSample = 2 * powerCount * (60 / request.headingStep + 1);
-    const total = request.samples.length * perSample;
+    const total = request.samples.reduce((sum, sample) => sum + sample.trials, 0);
     const activeCount = Math.min(count, request.samples.length);
     const inFlight = new Map<Worker, number>();
     const winners: Result[] = [];

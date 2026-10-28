@@ -9,6 +9,7 @@ import { scorePosition } from '../src/rules';
 import type { Frame, Result, Sample, GameMode } from './types';
 import type { DogPose } from '../src/dog';
 import { validEnvironment } from './random';
+import { sampleDrags } from './drags';
 import { shotSeed } from '../src/random';
 import { createSearchPool } from './worker-pool';
 import { createReports } from './reports';
@@ -198,7 +199,12 @@ async function start() {
       const u = (col + .5) / count; const v = (row + .5) / count;
       const point = { x: minX + u * (maxX - minX), y: minY + v * (maxY - minY) };
       const contact = scene.pickContact(point);
-      if (contact) samples.push({ contact, u, v });
+      if (contact && point.x >= 0 && point.x <= canvas.clientWidth && point.y >= 0 && point.y <= canvas.clientHeight) {
+        const sample: Sample = { contact, u, v, start: point, trials: 0 };
+        const drags = sampleDrags(sample, { width: canvas.clientWidth, height: canvas.clientHeight, powerStep, headingStep });
+        for (let next = drags.next(); !next.done; next = drags.next()) sample.trials++;
+        if (sample.trials) samples.push(sample);
+      }
     }
     if (!samples.length) { status.textContent = 'No contact points found. Check the viewer size and try again.'; render(); return; }
     search.disabled = true; stop.disabled = false;
@@ -211,7 +217,7 @@ async function start() {
     const started = performance.now();
     try {
       status.textContent = `${mode === 'puppy' ? 'Puppy' : 'Solo'} · ${requestedWorkers} workers · ${samples.length} contact points · Preparing search…`;
-      pool = createSearchPool({ samples, powerStep, headingStep, mode }, requestedWorkers,
+      pool = createSearchPool({ samples, width: canvas.clientWidth, height: canvas.clientHeight, powerStep, headingStep, mode }, requestedWorkers,
         (completed, total, best) => {
           progress.value = completed / total;
           status.textContent = `${requestedWorkers} workers · ${completed.toLocaleString()} / ${total.toLocaleString()} trials · Best ${best.toFixed(6)}% · ${((performance.now() - started) / 1000).toFixed(1)}s elapsed`;
